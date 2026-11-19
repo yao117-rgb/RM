@@ -1,0 +1,22 @@
+import cv2
+import numpy as np
+import main_max2
+img =cv2.imread(r"image (2).png",1)
+mj=img.copy()
+kernel=np.ones((3,3),np.uint8)
+
+light_boxes,a_box_list=main_max2.preprocess_image(img,kernel)
+light_boxes2,a_box_list2=main_max2.blue_preprocess_image(img,kernel)
+
+cv2.drawContours(mj, light_boxes, -1, (0,0,255), 2)
+cv2.drawContours(mj, a_box_list, -1, (0,0,255), 2)
+cv2.drawContours(mj, light_boxes2, -1, (0,255,0), 2)
+cv2.drawContours(mj, a_box_list2, -1, (0,255,0), 2)
+main_max2.print_multiple_rects_centers(light_boxes, img=mj)
+main_max2.print_multiple_rects_centers(a_box_list, img=mj)
+main_max2.print_multiple_rects_centers(light_boxes2, img=mj)
+main_max2.print_multiple_rects_centers(a_box_list2, img=mj)
+cv2.imshow("mj",mj)
+cv2.imshow("mj",mj)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

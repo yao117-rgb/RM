@@ -1,0 +1,114 @@
+import cv2
+import numpy as np
+
+def preprocess_image(img,kernel):
+  hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+  lower1=np.array([0,150,50])
+  upper1=np.array([10,255,255])
+  lower2 = np.array([160,150,50])
+  upper2 = np.array([180,255,255])
+  mark1=cv2.inRange(hsv,lower1,upper1)
+  mark2=cv2.inRange(hsv,lower2,upper2)
+  mark=cv2.bitwise_or(mark1,mark2)
+  kernel=cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
+  erosion_image=cv2.erode(mark,kernel,2)
+  mj=img.copy()
+  contours,hierarchy=cv2.findContours(erosion_image,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+  cv2.drawContours(mj, contours, -1, (0,0,255), 2)
+  light_boxes=[]
+  for cnt in contours:
+   area = cv2.contourArea(cnt)
+   if area < 1:
+    continue
+   rest=cv2.minAreaRect(cnt)
+   box=cv2.boxPoints(rest)
+   box = box.astype(int)
+   light_boxes.append(box)
+   cv2.drawContours(mj, [box], -1, (0,255,0), 2)
+   rest = cv2.minAreaRect(cnt)
+   cx, cy = rest[0]  
+   cx = int(cx)
+   cy = int(cy)
+   cv2.circle(mj, (cx, cy), 4, (0,0,255), -1)
+   print(f"x={cx:.1f},y={cy:.1f}")
+   text=f"x={cx:.1f},y={cy:.1f}"
+   cv2.putText(mj,text,(cx+5,cy-5),cv2.FONT_HERSHEY_SIMPLEX,0.4,(0,0,255),1)
+  if len(light_boxes)>=2:
+    pts_all=np.vstack([light_boxes[0],light_boxes[1]])
+    a_rest=cv2.minAreaRect(pts_all)
+    cxr,cyr=a_rest[0]
+    wr,hr=a_rest[1]
+    ange=a_rest[2]
+    side=max(wr,hr)
+    sq_a_rest=((cxr,cyr),(side,side),ange)
+    sq_a_box=cv2.boxPoints(sq_a_rest)
+    sq_a_box=sq_a_box.astype(int)
+    cv2.drawContours(mj, [sq_a_box], -1, (0,255,0), 2)
+    a_cx, a_cy = a_rest[0]  
+    a_cx = int(a_cx)
+    a_cy = int(a_cy)
+    cv2.circle(mj, (a_cx, a_cy), 4, (0,0,255), -1)
+    print(f"x={a_cx:.1f},y={a_cy:.1f}")
+    text=f"x={a_cx:.1f},y={a_cy:.1f}"
+    cv2.putText(mj,text,(a_cx+5,a_cy-5),cv2.FONT_HERSHEY_SIMPLEX,0.4,(0,0,255),1) 
+  return mj
+ 
+
+def blue_preprocess_image(img,kernel):
+  hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+  lower1=np.array([68,134,56])
+  upper1=np.array([122,255,144])
+  mark=cv2.inRange(hsv,lower1,upper1)
+  kernel=cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
+  erosion_image=cv2.erode(mark,kernel,2)
+  erosion_image=cv2.dilate(mark,kernel,2)
+  mj=img.copy()
+  contours,hierarchy=cv2.findContours(erosion_image,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+
+  light_boxes=[]
+  light_centers=[]
+  for cnt in contours:
+   area = cv2.contourArea(cnt)
+   if area < 170:
+    continue
+   rest=cv2.minAreaRect(cnt)
+   box=cv2.boxPoints(rest)
+   box = box.astype(int)
+   light_boxes.append(box)
+   cv2.drawContours(mj, [box], -1, (0,255,0), 2)
+   rest = cv2.minAreaRect(cnt)
+   cx, cy = rest[0]  
+   cx = int(cx)
+   cy = int(cy)
+   cv2.circle(mj, (cx, cy), 4, (0,0,255), -1)
+   print(f"x={cx:.1f},y={cy:.1f}")
+   text=f"x={cx:.1f},y={cy:.1f}"
+   cv2.putText(mj,text,(cx+5,cy-5),cv2.FONT_HERSHEY_SIMPLEX,0.4,(0,0,255),1)
+  if len(light_boxes)>=2:
+    pts_all=np.vstack([light_boxes[0],light_boxes[1]])
+    a_rest=cv2.minAreaRect(pts_all)
+    cxr,cyr=a_rest[0]
+    wr,hr=a_rest[1]
+    ange=a_rest[2]
+    side=max(wr,hr)
+    sq_a_rest=((cxr,cyr),(side,side),ange)
+    sq_a_box=cv2.boxPoints(sq_a_rest)
+    sq_a_box=sq_a_box.astype(int)
+    
+    a_cx, a_cy = a_rest[0]  
+    a_cx = int(a_cx)
+    a_cy = int(a_cy)
+    cv2.circle(mj, (a_cx, a_cy), 4, (0,0,255), -1)
+    print(f"x={a_cx:.1f},y={a_cy:.1f}")
+    text=f"x={a_cx:.1f},y={a_cy:.1f}"
+    cv2.putText(mj,text,(a_cx+5,a_cy-5),cv2.FONT_HERSHEY_SIMPLEX,0.4,(0,0,255),1) 
+  return mj
+  
+img =cv2.imread(r"image (1).png",1)
+kernel=np.ones((3,3),np.uint8)
+
+mj=blue_preprocess_image(img,kernel)
+
+cv2.imshow("mj",mj)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

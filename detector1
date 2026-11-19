@@ -1,0 +1,39 @@
+import cv2
+import numpy as np
+
+def preprocess_image(img):
+  hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+  lower1=np.array([0,120,80])
+  upper1=np.array([10,255,255])
+  lower2 = np.array([160,120,80])
+  upper2 = np.array([180,255,255])
+  mark1=cv2.inRange(hsv,lower1,upper1)
+  mark2=cv2.inRange(hsv,lower2,upper2)
+  mark=cv2.bitwise_or(mark1,mark2)
+  return mark
+  
+def morph_close(mark,kernel,repeat=2):
+ kernel=cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
+ erosion_image=cv2.erode(mark,kernel,repeat)
+ return erosion_image
+
+def find_circle_contours(erosion_image,img):
+ mj=img.copy()
+ contours,hierarchy=cv2.findContours(erosion_image,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+ cv2.drawContours(mj, contours, -1, (0,0,255), 2)
+ count=0
+ for cnt in contours:
+  area = cv2.contourArea(cnt)
+  if area < 1:
+   continue
+  count+=1
+  rest=cv2.minAreaRect(cnt)
+  box=cv2.boxPoints(rest)
+  box = box.astype(int)
+  cv2.drawContours(mj, [box], -1, (0,255,0), 2)
+ (x,y)=(10,30)
+ text = f"count: {count}"
+ cv2.putText(mj, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
+ print(count)
+ return mj
+  

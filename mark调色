@@ -1,0 +1,56 @@
+import cv2
+import numpy as np
+
+# 滑动条回调函数，必须要有，滑动条变动就会调用这个
+def empty(x):
+    print(x)
+
+# 读取图片
+img = cv2.imread('image (2).png')
+# 缩放到500x500
+img = cv2.resize(img, dsize=(500, 500))
+# BGR转HSV
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+# 创建窗口
+cv2.namedWindow('trackbar', cv2.WINDOW_AUTOSIZE)
+
+# 创建6个滑动条：H、S、V 的最小、最大值
+cv2.createTrackbar('hue-min', 'trackbar', 0, 180, empty)
+cv2.createTrackbar('hue-max', 'trackbar', 180, 180, empty)
+
+cv2.createTrackbar('sat-min', 'trackbar', 0, 255, empty)
+cv2.createTrackbar('sat-max', 'trackbar', 255, 255, empty)
+
+cv2.createTrackbar('val-min', 'trackbar', 0, 255, empty)
+cv2.createTrackbar('val-max', 'trackbar', 255, 255, empty)
+
+
+while True:
+    # 获取滑动条当前数值
+    h_min = cv2.getTrackbarPos('hue-min', 'trackbar')
+    h_max = cv2.getTrackbarPos('hue-max', 'trackbar')
+
+    s_min = cv2.getTrackbarPos('sat-min', 'trackbar')
+    s_max = cv2.getTrackbarPos('sat-max', 'trackbar')
+
+    v_min = cv2.getTrackbarPos('val-min', 'trackbar')
+    v_max = cv2.getTrackbarPos('val-max', 'trackbar')
+
+    # 构造上下限，生成掩码mask
+    lower = np.array([h_min, s_min, v_min])
+    upper = np.array([h_max, s_max, v_max])
+    mask = cv2.inRange(hsv, lower, upper)
+
+    # 原图与mask按位与，提取目标颜色区域
+    result = cv2.bitwise_and(img, img, mask=mask)
+
+    cv2.imshow("img", img)
+    cv2.imshow("mask", mask)
+    cv2.imshow("result", result)
+
+    # 按ESC退出循环
+    if cv2.waitKey(1) & 0xFF == 27:
+        break
+
+cv2.destroyAllWindows()
